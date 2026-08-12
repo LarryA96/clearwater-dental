@@ -10,7 +10,7 @@
     <!-- Main menu with navigation links -->
     <div class="menu">
       
-        <a href="index.php" class="menu-button">
+        <a href="details.php" class="menu-button">
           Search Patient Details
         </a>
 
