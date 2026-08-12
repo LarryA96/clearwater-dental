@@ -4,8 +4,10 @@
   <header>
     
     <!-- Website title -->
-    <h1>Clearwater Dental</h1>
-    <p>Patient Management System</p>
+    <a href="index.php">
+      <h1>Clearwater Dental</h1>
+      <p>Patient Management System</p>
+    </a>
 
     <!-- Main menu with navigation links -->
     <div class="menu">
