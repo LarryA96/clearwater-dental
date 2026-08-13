@@ -37,13 +37,27 @@ header p {
   color: #666;
 }
 
+header a {
+  text-decoration: none;
+}
+
+/* FOOTER */
+footer {
+  margin-top: 30px;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
 /* NAVIGATION ELEMENTS */
 nav {
   margin-top: 15px;
 }
 
 nav a {
-  margin-right: 20px;
+  margin-right: 15px;
   color: #2779a7;
   text-decoration: none;
 }
@@ -52,12 +66,22 @@ nav a:hover {
   text-decoration: underline;
 }
 
+nav .main {
+  padding: 3px 6px;
+  font-weight: bold;
+  color: #333;
+  border: 1px solid #333;
+  border-bottom: none;
+  margin-bottom: -16px;
+}
+
 /* HOME PAGE MENU */
 
 .menu {
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
+  justify-content: center;
 }
 
 .menu-button {
@@ -101,7 +125,8 @@ label {
   font-weight: bold;
 }
 
-input, select {
+input,
+select {
   width: 100%;
   padding: 11px;
   border: 1px solid #ccc;
@@ -124,7 +149,8 @@ button,
   cursor: pointer;
 }
 
-button:hover, .button:hover {
+button:hover,
+.button:hover {
   background: #1e5e82;
 }
 
@@ -135,7 +161,8 @@ table {
   margin-top: 20px;
 }
 
-th, td {
+th,
+td {
   padding: 12px;
   border: 1px solid #ddd;
   text-align: left;
