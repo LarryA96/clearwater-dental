@@ -56,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <body>
     <div class="container">
         <header>
-            <?php require 'header.php'; ?>
+            <?php require './page_elements/header.php'; ?>
             <br>
             <nav>
                 <a href="details.php" class="main">
@@ -146,7 +146,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </table>
             <?php endif; ?>
         <?php endif; ?>
-        <?php require 'footer.php'; ?>
+        <?php require './page_elements/footer.php'; ?>
     </div>
 </body>
 

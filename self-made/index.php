@@ -11,10 +11,10 @@
 <body>
     <div class="container">
         <header>
-            <?php require 'header.php'; ?>
+            <?php require './page_elements/header.php'; ?>
         </header>
-        <?php require 'menu.php'; ?>
-        <?php require 'footer.php'; ?>
+        <?php require './page_elements/menu.php'; ?>
+        <?php require './page_elements/footer.php'; ?>
     </div>
 </body>
 
