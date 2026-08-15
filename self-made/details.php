@@ -59,30 +59,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <?php require './page_elements/header.php'; ?>
             <br>
             <nav>
-                <a href="details.php" class="main">
-                    Search Patient
-                </a>
+                <a href="details.php" class="main">Search Patient</a>
 
-                <a href="history.php">
-                    Search Patient History
-                </a>
+                <a href="history.php">Search Patient History</a>
 
-                <a href="add_patient.php">
-                    Add New Patient
-                </a>
+                <a href="add_patient.php">Add New Patient</a>
 
-                <a href="add_event.php">
-                    Add Patient Event
-                </a>
+                <a href="add_event.php">Add Patient Event</a>
             </nav>
         </header>
-        <form method="POST">
+        <form method="POST" action="details.php">
 
             <label for="search">
                 &nbspPatient ID, Name, or Email
             </label>
-            <input type="text" id="search" name="search" value="<?php echo htmlspecialchars($search) ?>"
-                placeholder="Enter patient ID, name, or email" required>
+
+            <input type="text" id="search" name="search" placeholder="Enter patient ID, name, or email" value="<?php echo htmlspecialchars
+            ($search) ?>" required>
 
             <button type="submit">
                 Search
@@ -107,38 +100,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         <tr>
                             <th>Patient ID</th>
                             <th>Name</th>
+                            <th>Age</th>
                             <th>Date of Birth</th>
                             <th>Email</th>
                             <th>Phone</th>
+                            <th>Insurance</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($patients as $patient): ?>
                             <tr>
                                 <td>
-                                    <?= htmlspecialchars(
-                                        $patient["Patient_ID"]
-                                    ) ?>
+                                    <?= htmlspecialchars($patient["Patient_ID"]) ?>
                                 </td>
                                 <td>
-                                    <?= htmlspecialchars(
-                                        $patient["Name"]
-                                    ) ?>
+                                    <?= htmlspecialchars($patient["Name"]) ?>
                                 </td>
                                 <td>
-                                    <?= htmlspecialchars(
-                                        $patient["D.O.B"]
-                                    ) ?>
+                                    <?= htmlspecialchars($patient["Age"]) ?>
                                 </td>
                                 <td>
-                                    <?= htmlspecialchars(
-                                        $patient["Email"]
-                                    ) ?>
+                                    <?= htmlspecialchars($patient["D.O.B"]) ?>
                                 </td>
                                 <td>
-                                    <?= htmlspecialchars(
-                                        $patient["Phone"]
-                                    ) ?>
+                                    <?= htmlspecialchars($patient["Email"]) ?>
+                                </td>
+                                <td>
+                                    <?= htmlspecialchars($patient["Phone"]) ?>
+                                </td>
+                                <td>
+                                    <?= htmlspecialchars($patient["Insurance"]) ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

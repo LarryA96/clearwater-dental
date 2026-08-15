@@ -176,10 +176,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>
         Add Patient - Clearwater Dental
@@ -191,187 +188,142 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 <body>
 
-<div class="container">
+    <div class="container">
 
-    <!-- ======================================================
+        <!-- ======================================================
          PAGE HEADER
          ====================================================== -->
 
-    <header>
+        <header>
 
-        <h1>
-            Add New Patient
-        </h1>
-
-
-        <nav>
-
-            <a href="index.php">
-                Home
-            </a>
-
-            <a href="search.php">
-                Search
-            </a>
-
-        </nav>
-
-    </header>
+            <h1>
+                Add New Patient
+            </h1>
 
 
-    <!-- ======================================================
+            <nav>
+
+                <a href="index.php">
+                    Home
+                </a>
+
+                <a href="search.php">
+                    Search
+                </a>
+
+            </nav>
+
+        </header>
+
+
+        <!-- ======================================================
          ERROR MESSAGE
          ====================================================== -->
 
-    <?php if ($error !== ""): ?>
+        <?php if ($error !== ""): ?>
 
-        <div class="error">
+            <div class="error">
 
-            <?= htmlspecialchars($error) ?>
+                <?= htmlspecialchars($error) ?>
 
-        </div>
+            </div>
 
-    <?php endif; ?>
+        <?php endif; ?>
 
 
-    <!-- ======================================================
+        <!-- ======================================================
          NEW PATIENT FORM
          ====================================================== -->
 
-    <form method="POST" class="form">
+        <form method="POST" class="form">
 
 
-        <!-- Patient name -->
+            <!-- Patient name -->
 
-        <label for="name">
-            Full Name
-        </label>
+            <label for="name">
+                Full Name
+            </label>
 
-        <input
-            type="text"
-            id="name"
-            name="name"
-            value="<?= htmlspecialchars(
+            <input type="text" id="name" name="name" value="<?= htmlspecialchars(
                 $_POST["name"] ?? ""
-            ) ?>"
-            required
-        >
+            ) ?>" required>
 
 
-        <!-- Patient age -->
+            <!-- Patient age -->
 
-        <label for="age">
-            Age
-        </label>
+            <label for="age">
+                Age
+            </label>
 
-        <input
-            type="text"
-            id="age"
-            name="age"
-            placeholder="Example: 35 years old"
-            value="<?= htmlspecialchars(
+            <input type="text" id="age" name="age" placeholder="Example: 35 years old" value="<?= htmlspecialchars(
                 $_POST["age"] ?? ""
-            ) ?>"
-            required
-        >
+            ) ?>" required>
 
 
-        <!-- Email -->
+            <!-- Email -->
 
-        <label for="email">
-            Email
-        </label>
+            <label for="email">
+                Email
+            </label>
 
-        <input
-            type="email"
-            id="email"
-            name="email"
-            value="<?= htmlspecialchars(
+            <input type="email" id="email" name="email" value="<?= htmlspecialchars(
                 $_POST["email"] ?? ""
-            ) ?>"
-            required
-        >
+            ) ?>" required>
 
 
-        <!-- Date of birth -->
+            <!-- Date of birth -->
 
-        <label for="dob">
-            Date of Birth
-        </label>
+            <label for="dob">
+                Date of Birth
+            </label>
 
-        <input
-            type="text"
-            id="dob"
-            name="dob"
-            placeholder="Example: March 4, 2005"
-            value="<?= htmlspecialchars(
+            <input type="text" id="dob" name="dob" placeholder="Example: March 4, 2005" value="<?= htmlspecialchars(
                 $_POST["dob"] ?? ""
-            ) ?>"
-            required
-        >
+            ) ?>" required>
 
 
-        <!-- Phone number -->
+            <!-- Phone number -->
 
-        <label for="phone">
-            Phone
-        </label>
+            <label for="phone">
+                Phone
+            </label>
 
-        <input
-            type="text"
-            id="phone"
-            name="phone"
-            placeholder="Example: (555) 555-5555"
-            value="<?= htmlspecialchars(
+            <input type="text" id="phone" name="phone" placeholder="Example: (555) 555-5555" value="<?= htmlspecialchars(
                 $_POST["phone"] ?? ""
-            ) ?>"
-            required
-        >
+            ) ?>" required>
 
 
-        <!-- Insurance company -->
+            <!-- Insurance company -->
 
-        <label for="insurance">
-            Insurance
-        </label>
+            <label for="insurance">
+                Insurance
+            </label>
 
-        <input
-            type="text"
-            id="insurance"
-            name="insurance"
-            value="<?= htmlspecialchars(
+            <input type="text" id="insurance" name="insurance" value="<?= htmlspecialchars(
                 $_POST["insurance"] ?? ""
-            ) ?>"
-            required
-        >
+            ) ?>" required>
 
 
-        <!-- Patient address -->
+            <!-- Patient address -->
 
-        <label for="address">
-            Address
-        </label>
+            <label for="address">
+                Address
+            </label>
 
-        <input
-            type="text"
-            id="address"
-            name="address"
-            value="<?= htmlspecialchars(
+            <input type="text" id="address" name="address" value="<?= htmlspecialchars(
                 $_POST["address"] ?? ""
-            ) ?>"
-            required
-        >
+            ) ?>" required>
 
 
-        <!-- Submit the new patient -->
+            <!-- Submit the new patient -->
 
-        <button type="submit">
-            Add Patient
-        </button>
+            <button type="submit">
+                Add Patient
+            </button>
 
-    </form>
+        </form>
 
-</div>
+    </div>
 
 </body>
 

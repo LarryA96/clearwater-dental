@@ -292,6 +292,7 @@ tr:nth-child(even) {
   border: 1px solid #e3aaaa;
   border-radius: 5px;
   color: #9b2226;
+  white-space: pre-line;
 }
 
 /*
