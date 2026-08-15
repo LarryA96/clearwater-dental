@@ -1,47 +1,15 @@
 <?php
 
-/*
- * ============================================================
- * DATABASE CONNECTION
- * ============================================================
- */
-
+//Connect database
 require_once "db.php";
 
-
-/*
- * Store any validation error here.
- */
-
+//Variable for error messages
 $error = "";
 
+//Variable for doctor notes
+$notes = ["Routine follow-up", "No complications", "Medication adjusted", "Patient improving", "Lab results reviewed", "No notes"];
 
-/*
- * ============================================================
- * DETERMINE PATIENT
- * ============================================================
- *
- * The page can be opened two ways.
- *
- * From demographics/history:
- *
- * add_event.php?patient_id=25
- *
- * Or directly:
- *
- * add_event.php
- *
- * If the form has been submitted, the patient ID comes from
- * the hidden form field instead.
- */
-
-$patient_id = filter_input(
-    INPUT_GET,
-    "patient_id",
-    FILTER_VALIDATE_INT
-);
-
-
+//Get patient ID from hidden field
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     $patient_id = filter_input(
@@ -49,48 +17,39 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         "patient_id",
         FILTER_VALIDATE_INT
     );
+} else {
+    $patient_id = filter_input(
+        INPUT_GET,
+        "patient_id",
+        FILTER_VALIDATE_INT
+    );
 }
 
+// Variable for patient info
+$patient = "";
 
-/*
- * ============================================================
- * FIND PATIENT
- * ============================================================
- *
- * Retrieve the patient's name so that the form can confirm
- * which patient the event is being added to.
- */
-
-$patient = null;
-
-
+//Find patient name using ID
 if ($patient_id) {
 
-    $stmt = $pdo->prepare("
-        SELECT
-            `Patient_ID`,
-            `Name`
-        FROM patientlist_1
-        WHERE `Patient_ID` = ?
-    ");
+    $sql = "
+    SELECT `Patient_ID`, `Name`
+    FROM patientlist_1
+    WHERE `Patient_ID` = ?
+    ";
 
+    $stmt = $pdo->prepare($sql);
     $stmt->execute([$patient_id]);
 
+    //Store patient info in $patient
     $patient = $stmt->fetch();
+
+    if (!$patient) {
+        $error = "true";
+    }
 }
 
-
-/*
- * ============================================================
- * GET AVAILABLE PROCEDURES
- * ============================================================
- *
- * Retrieve every procedure from the procedures table.
- *
- * These records will be used to build the dropdown menu.
- */
-
-$stmt = $pdo->query("
+//Grab all procedure options from procedures table
+$sql = "
     SELECT
         `ProcedureCode`,
         `ProcedureName`,
@@ -98,121 +57,46 @@ $stmt = $pdo->query("
         `Cost`
     FROM procedures
     ORDER BY `ProcedureCode`
-");
+";
+$stmt = $pdo->query($sql);
 
-
-/*
- * Store all procedures in an array.
- */
-
+//Store procedures in $procedures
 $procedures = $stmt->fetchAll();
 
-
-/*
- * ============================================================
- * PROCESS NEW EVENT
- * ============================================================
- */
-
+//Run query on form submission
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-
-    /*
-     * Make sure the patient exists.
-     */
-
     if (!$patient) {
-
-        $error = "Patient not found.";
+        //Give error if patient not found
+        $error = "true";
 
     } else {
 
+        //Grab values from form
+        $procedure_id = trim($_POST["procedure_id"]);
 
-        /*
-         * Retrieve the form values.
-         */
+        $date = trim($_POST["date"]);
 
-        $procedure_id = trim(
-            $_POST["procedure_id"]
-        );
+        $amount_billed = trim($_POST["amount_billed"]);
 
-        $date = trim(
-            $_POST["date"]
-        );
+        $amount_owed = trim($_POST["amount_owed"]);
 
-        $amount_billed = trim(
-            $_POST["amount_billed"]
-        );
+        $note = trim($_POST["note"]);
 
-        $amount_owed = trim(
-            $_POST["amount_owed"]
-        );
-
-        $notes = trim(
-            $_POST["notes"]
-        );
-
-
-        /*
-         * ====================================================
-         * VALIDATE EVENT FORM
-         * ====================================================
-         */
-
+        //Check form for errors
         if (
             $procedure_id === "" ||
             $date === "" ||
             $amount_billed === "" ||
             $amount_owed === "" ||
-            $notes === ""
+            $note === ""
         ) {
 
             $error = "Please complete all fields.";
 
         } else {
-
-
-            /*
-             * =================================================
-             * VERIFY PROCEDURE
-             * =================================================
-             *
-             * Make sure the procedure selected by the user
-             * actually exists in the procedures table.
-             */
-
-            $stmt = $pdo->prepare("
-                SELECT COUNT(*)
-                FROM procedures
-                WHERE `ProcedureCode` = ?
-            ");
-
-            $stmt->execute([
-                $procedure_id
-            ]);
-
-
-            /*
-             * If the procedure doesn't exist, don't insert
-             * the history record.
-             */
-
-            if ($stmt->fetchColumn() == 0) {
-
-                $error = "Invalid procedure selected.";
-
-            } else {
-
-
-                /*
-                 * =================================================
-                 * INSERT HISTORY EVENT
-                 * =================================================
-                 *
-                 * Insert the new dental event into patienthistory.
-                 */
-
-                $stmt = $pdo->prepare("
+            //Insert event in the patienthistory table
+            $sql = "
                     INSERT INTO patienthistory
                     (
                         `Patient_ID`,
@@ -222,136 +106,69 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         `Amount Owed`,
                         `Notes`
                     )
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                $patient_id,
+                $procedure_id,
+                $date,
+                $amount_billed,
+                $amount_owed,
+                $note
+            ]);
 
-                    VALUES
-                    (
-                        ?, ?, ?, ?, ?, ?
-                    )
-                ");
-
-
-                /*
-                 * Execute the INSERT statement.
-                 */
-
-                $stmt->execute([
-
-                    $patient_id,
-
-                    $procedure_id,
-
-                    $date,
-
-                    $amount_billed,
-
-                    $amount_owed,
-
-                    $notes
-
-                ]);
-
-
-                /*
-                 * =================================================
-                 * RETURN TO PATIENT HISTORY
-                 * =================================================
-                 *
-                 * After successfully inserting the event,
-                 * display the updated history page.
-                 */
-
-                header(
-                    "Location: history.php?id=" .
-                    urlencode($patient_id)
-                );
-
-                exit;
-            }
+            //Redirect to patient history page. History page will show successful event adding
+            header(
+                "Location: history.php?eventRedirect=true&search=" .
+                urlencode($patient_id)
+            );
+            exit;
         }
     }
 }
-
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>
-        Add Patient Event - Clearwater Dental
-    </title>
-
-    <link rel="stylesheet" href="style.css">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clearwater Dental</title>
+    <link rel="stylesheet" href="style.css?v=2">
 </head>
 
 <body>
+    <div class="container">
+        <header>
+            <?php require './page_elements/header.php'; ?>
+            <br>
+            <nav>
+                <a href="details.php">Search Patient</a>
 
-<div class="container">
+                <a href="history.php">Search Patient History</a>
 
-    <!-- ======================================================
-         PAGE HEADER
-         ====================================================== -->
+                <a href="add_patient.php">Add New Patient</a>
 
-    <header>
+                <a href="add_event.php" class="main">Add Patient Event</a>
+            </nav>
+        </header>
 
-        <h1>
-            Add Patient Event
-        </h1>
-
-
-        <nav>
-
-            <a href="index.php">
-                Home
-            </a>
-
-            <a href="search.php">
-                Search
-            </a>
-
-        </nav>
-
-    </header>
-
-
-    <!-- ======================================================
-         NO PATIENT SELECTED
-         ======================================================
-
-         If the user opened add_event.php without specifying
-         a patient, give them a form to select one by ID.
-    -->
-
-    <?php if (!$patient): ?>
-
-
+        <!-- Choose the patient to add event for -->
         <h2>
             Select Patient
         </h2>
 
-
-        <form method="GET" class="form">
+        <form method="GET" class="form" action="add_event.php">
 
             <label for="patient_id">
                 Patient ID
             </label>
 
 
-            <input
-                type="number"
-                id="patient_id"
-                name="patient_id"
-                required
-            >
+            <input type="number" id="patient_id" name="patient_id" value="<?= htmlspecialchars($patient_id) ?>"
+                required>
 
 
             <button type="submit">
@@ -360,212 +177,102 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         </form>
 
-
-    <?php else: ?>
-
-
-        <!-- ==================================================
-             SELECTED PATIENT
-             ================================================== -->
-
-        <div class="patient-header">
-
-            <h2>
-
-                <?= htmlspecialchars(
-                    $patient["Name"]
-                ) ?>
-
-            </h2>
-
-
-            <p>
-
-                Patient ID:
-
-                <strong>
-
-                    <?= htmlspecialchars(
-                        $patient["Patient_ID"]
-                    ) ?>
-
-                </strong>
-
-            </p>
-
-        </div>
-
-
-        <!-- ==================================================
-             DISPLAY ERROR
-             ================================================== -->
-
-        <?php if ($error !== ""): ?>
-
+        <!-- Make sure ID entered is valid -->
+        <?php if ($patient_id && !$patient): ?>
+            <br>
             <div class="error">
 
-                <?= htmlspecialchars($error) ?>
-
+                Patient ID: <?= htmlspecialchars($patient_id) ?>
+                <br>
+                Not Found
             </div>
 
         <?php endif; ?>
 
+        <!-- Generate display if valid ID entered -->
+        <?php if ($patient): ?>
+            <br>
+            <div class="patient-header">
+                <h2>
+                    <?= htmlspecialchars(
+                        $patient["Name"]
+                    ) ?>
+                </h2>
+                <p>
+                    Patient ID:
+                    <strong>
 
-        <!-- ==================================================
-             NEW EVENT FORM
-             ================================================== -->
+                        <?= htmlspecialchars(
+                            $patient["Patient_ID"]
+                        ) ?>
 
-        <form method="POST" class="form">
+                    </strong>
 
+                </p>
 
-            <!--
-                Hidden field preserves the patient ID when
-                the form is submitted.
-            -->
+            </div>
 
-            <input
-                type="hidden"
-                name="patient_id"
-                value="<?= htmlspecialchars(
+            <!-- Notify user if form is incomplete -->
+            <?php if ($error !== ""): ?>
+                <div class="error">
+                    <?= htmlspecialchars($error) ?>
+                </div>
+            <?php endif; ?>
+
+            <form method="POST" class="form" action="add_event.php">
+
+                <!-- Hidden field so patient ID can be carried over to the POST request -->
+                <input type="hidden" name="patient_id" value="<?= htmlspecialchars(
                     $patient["Patient_ID"]
-                ) ?>"
-            >
+                ) ?>">
 
+                <label for="procedure_id">
+                    Procedure
+                </label>
 
-            <!-- =================================================
-                 PROCEDURE DROPDOWN
-                 ================================================= -->
+                <select id="procedure_id" name="procedure_id" required>
 
-            <label for="procedure_id">
-                Procedure
-            </label>
+                    <option value="">-- Select Procedure --</option>
 
+                    <?php foreach ($procedures as $procedure): ?>
+                        <option value="<?= htmlspecialchars($procedure["ProcedureCode"]) ?>">
+                            <?= htmlspecialchars($procedure["ProcedureCode"]) ?>
+                            -
+                            <?= htmlspecialchars($procedure["ProcedureName"]) ?> ($<?= number_format($procedure["Cost"], 2) ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
 
-            <select
-                id="procedure_id"
-                name="procedure_id"
-                required
-            >
+                <label for="date">Date</label>
 
-                <option value="">
-                    -- Select Procedure --
-                </option>
+                <input type="date" id="date" name="date" required>
 
+                <label for="amount_billed">Amount Billed</label>
 
-                <!--
-                    Loop through the procedures retrieved from
-                    the database and create an option for each.
-                -->
+                <input type="text" id="amount_billed" name="amount_billed" placeholder="$250" required>
 
-                <?php foreach ($procedures as $procedure): ?>
+                <label for="amount_owed">Amount Owed</label>
 
-                    <option
-                        value="<?= htmlspecialchars(
-                            $procedure["ProcedureCode"]
-                        ) ?>"
-                    >
+                <input type="text" id="amount_owed" name="amount_owed" placeholder="$100" required>
 
-                        <?= htmlspecialchars(
-                            $procedure["ProcedureCode"]
-                        ) ?>
+                <label for="note">Note</label>
 
-                        -
+                <select id="note" name="note" required>
+                    <option value="">-- Add Note --</option>
+                    <?php foreach ($notes as $phrase): ?>
+                        <option value="<?= htmlspecialchars($phrase) ?>">
+                            <?= htmlspecialchars($phrase) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
 
-                        <?= htmlspecialchars(
-                            $procedure["ProcedureName"]
-                        ) ?>
-
-                        ($<?= number_format(
-                            $procedure["Cost"],
-                            2
-                        ) ?>)
-
-                    </option>
-
-                <?php endforeach; ?>
-
-            </select>
-
-
-            <!-- =================================================
-                 EVENT DATE
-                 ================================================= -->
-
-            <label for="date">
-                Date
-            </label>
-
-            <input
-                type="date"
-                id="date"
-                name="date"
-                required
-            >
-
-
-            <!-- =================================================
-                 AMOUNT BILLED
-                 ================================================= -->
-
-            <label for="amount_billed">
-                Amount Billed
-            </label>
-
-            <input
-                type="text"
-                id="amount_billed"
-                name="amount_billed"
-                placeholder="Example: $250"
-                required
-            >
-
-
-            <!-- =================================================
-                 AMOUNT OWED
-                 ================================================= -->
-
-            <label for="amount_owed">
-                Amount Owed
-            </label>
-
-            <input
-                type="text"
-                id="amount_owed"
-                name="amount_owed"
-                placeholder="Example: $100"
-                required
-            >
-
-
-            <!-- =================================================
-                 NOTES
-                 ================================================= -->
-
-            <label for="notes">
-                Notes
-            </label>
-
-            <input
-                type="text"
-                id="notes"
-                name="notes"
-                placeholder="Example: Routine follow-up"
-                required
-            >
-
-
-            <!-- Submit the new event -->
-
-            <button type="submit">
-                Add Event
-            </button>
-
-        </form>
-
-    <?php endif; ?>
-
-</div>
-
+                <button type="submit">
+                    Add Event
+                </button>
+            </form>
+        <?php endif; ?>
+        <?php require './page_elements/footer.php'; ?>
+    </div>
 </body>
 
 </html>

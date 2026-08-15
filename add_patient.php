@@ -1,62 +1,26 @@
 <?php
-
-/*
- * ============================================================
- * DATABASE CONNECTION
- * ============================================================
- */
-
 require_once "db.php";
 
+//Variable for insurance providers
+$providers = ["Guardian", "Ameritas", "Cigna", "Delta Dental", "Humana"];
 
-/*
- * $error stores an error message if the form isn't completed
- * correctly.
- */
-
+//Variable for error messages
 $error = "";
 
-
-/*
- * ============================================================
- * PROCESS FORM SUBMISSION
- * ============================================================
- *
- * This section only runs after the user clicks "Add Patient".
- */
-
+//On form submission, run SQL query
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-
-    /*
-     * Retrieve all values submitted by the form.
-     *
-     * trim() removes unnecessary spaces.
-     */
-
+    //Get submitted values
     $name = trim($_POST["name"]);
-
     $age = trim($_POST["age"]);
-
     $email = trim($_POST["email"]);
-
     $dob = trim($_POST["dob"]);
-
     $phone = trim($_POST["phone"]);
-
     $insurance = trim($_POST["insurance"]);
-
     $address = trim($_POST["address"]);
+    $cityState = trim($_POST["cityState"]);
 
-
-    /*
-     * ========================================================
-     * VALIDATE FORM
-     * ========================================================
-     *
-     * Make sure none of the required fields are empty.
-     */
-
+    //Check that no values are empty
     if (
         $name === "" ||
         $age === "" ||
@@ -66,47 +30,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $insurance === "" ||
         $address === ""
     ) {
-
         $error = "Please complete all fields.";
-
     } else {
+        //Create patient ID by finding the max and using the next available number
+        $sql = "
+        SELECT COALESCE(MAX(`Patient_ID`), 0) + 1
+        FROM patientlist_1
+        ";
 
+        $stmt = $pdo->query($sql);
+        $patientID = $stmt->fetchColumn();
 
-        /*
-         * ====================================================
-         * GENERATE NEW PATIENT ID
-         * ====================================================
-         *
-         * Since Patient_ID is not AUTO_INCREMENT, find the
-         * highest existing ID and add 1.
-         */
+        //Create formatted date
+        $dob = date("F j,  Y", strtotime($_POST["dob"]));
 
-        $stmt = $pdo->query("
-            SELECT
-                COALESCE(MAX(`Patient_ID`), 0) + 1
-            FROM patientlist_1
-        ");
-
-
-        /*
-         * Store the calculated ID.
-         */
-
-        $patient_id = $stmt->fetchColumn();
-
-
-        /*
-         * ====================================================
-         * INSERT NEW PATIENT
-         * ====================================================
-         *
-         * Insert the new patient's demographic information
-         * into the existing patientlist_1 table.
-         */
-
-        $stmt = $pdo->prepare("
-            INSERT INTO patientlist_1
-            (
+        //Insert patient into patientlist_1
+        $sql = "
+        INSERT INTO patientlist_1
+        (
                 `Name`,
                 `Age`,
                 `Email`,
@@ -115,54 +56,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 `Insurance`,
                 `Address`,
                 `Patient_ID`
-            )
+        )
+        VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+        ";
 
-            VALUES
-            (
-                ?, ?, ?, ?, ?, ?, ?, ?
-            )
-        ");
-
-
-        /*
-         * Execute the INSERT statement.
-         */
-
+        $stmt = $pdo->prepare($sql);
         $stmt->execute([
-
             $name,
-
-            $age,
-
+            intval($age) . " years old",
             $email,
-
             $dob,
-
             $phone,
-
             $insurance,
-
-            $address,
-
-            $patient_id
-
+            "$address $cityState",
+            $patientID
         ]);
 
-
-        /*
-         * ====================================================
-         * REDIRECT TO NEW PATIENT
-         * ====================================================
-         *
-         * After successfully adding the patient, send the
-         * user to the new patient's demographics page.
-         */
-
-        header(
-            "Location: demographics.php?id=" .
-            urlencode($patient_id)
-        );
-
+        //Redirect to details.php with new patient info
+        header("Location: history.php?patientRedirect=true&search=" . urlencode($patientID));
         exit;
     }
 }
@@ -173,158 +84,110 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>
-        Add Patient - Clearwater Dental
-    </title>
-
-    <link rel="stylesheet" href="style.css">
-
+    <title>Clearwater Dental</title>
+    <link rel="stylesheet" href="style.css?v=2">
 </head>
 
 <body>
-
     <div class="container">
-
-        <!-- ======================================================
-         PAGE HEADER
-         ====================================================== -->
-
         <header>
-
-            <h1>
-                Add New Patient
-            </h1>
-
-
+            <?php require './page_elements/header.php'; ?>
+            <br>
             <nav>
+                <a href="details.php">Search Patient</a>
 
-                <a href="index.php">
-                    Home
-                </a>
+                <a href="history.php">Search Patient History</a>
 
-                <a href="search.php">
-                    Search
-                </a>
+                <a href="add_patient.php" class="main">Add New Patient</a>
 
+                <a href="add_event.php">Add Patient Event</a>
             </nav>
-
         </header>
 
-
-        <!-- ======================================================
-         ERROR MESSAGE
-         ====================================================== -->
-
+        <!-- Notify user if fields not filled properly -->
         <?php if ($error !== ""): ?>
-
             <div class="error">
-
                 <?= htmlspecialchars($error) ?>
-
             </div>
-
         <?php endif; ?>
 
-
-        <!-- ======================================================
-         NEW PATIENT FORM
-         ====================================================== -->
-
-        <form method="POST" class="form">
-
-
-            <!-- Patient name -->
+        <form method="POST" class="form" action="add_patient.php">
 
             <label for="name">
                 Full Name
             </label>
 
-            <input type="text" id="name" name="name" value="<?= htmlspecialchars(
+            <input type="text" id="name" name="name" placeholder="James Cameron" value="<?= htmlspecialchars(
                 $_POST["name"] ?? ""
             ) ?>" required>
-
-
-            <!-- Patient age -->
 
             <label for="age">
                 Age
             </label>
 
-            <input type="text" id="age" name="age" placeholder="Example: 35 years old" value="<?= htmlspecialchars(
+            <input type="text" id="age" name="age" placeholder="35" value="<?= htmlspecialchars(
                 $_POST["age"] ?? ""
             ) ?>" required>
-
-
-            <!-- Email -->
 
             <label for="email">
                 Email
             </label>
 
-            <input type="email" id="email" name="email" value="<?= htmlspecialchars(
+            <input type="email" id="email" name="email" placeholder="jcameron@gmail.com" value="<?= htmlspecialchars(
                 $_POST["email"] ?? ""
             ) ?>" required>
-
-
-            <!-- Date of birth -->
 
             <label for="dob">
                 Date of Birth
             </label>
 
-            <input type="text" id="dob" name="dob" placeholder="Example: March 4, 2005" value="<?= htmlspecialchars(
+            <input type="date" id="dob" name="dob" value="<?= htmlspecialchars(
                 $_POST["dob"] ?? ""
             ) ?>" required>
-
-
-            <!-- Phone number -->
 
             <label for="phone">
                 Phone
             </label>
 
-            <input type="text" id="phone" name="phone" placeholder="Example: (555) 555-5555" value="<?= htmlspecialchars(
+            <input type="text" id="phone" name="phone" placeholder="(555) 555-5555" value="<?= htmlspecialchars(
                 $_POST["phone"] ?? ""
             ) ?>" required>
 
-
-            <!-- Insurance company -->
 
             <label for="insurance">
                 Insurance
             </label>
 
-            <input type="text" id="insurance" name="insurance" value="<?= htmlspecialchars(
-                $_POST["insurance"] ?? ""
-            ) ?>" required>
-
-
-            <!-- Patient address -->
+            <select id="insurance" name="insurance" required>
+                <option value="">-- Select Insurance Provider --</option>
+                <?php foreach ($providers as $provider): ?>
+                    <option value="<?= htmlspecialchars($provider) ?>">
+                        <?= htmlspecialchars($provider) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
 
             <label for="address">
                 Address
             </label>
 
-            <input type="text" id="address" name="address" value="<?= htmlspecialchars(
+            <input type="text" id="address" name="address" placeholder="123 Sesame St." value="<?= htmlspecialchars(
                 $_POST["address"] ?? ""
             ) ?>" required>
 
+            <label for="cityState">
+                City and State
+            </label>
+            <input type="text" id="cityState" name="cityState" placeholder="Philadelphia, PA" value="<?= htmlspecialchars(
+                $_POST["cityState"] ?? ""
+            ) ?>" required>
 
-            <!-- Submit the new patient -->
-
-            <button type="submit">
+            <button type=" submit">
                 Add Patient
             </button>
-
         </form>
 
-    </div>
-
+        <?php require './page_elements/footer.php'; ?>
 </body>
-
-</html>

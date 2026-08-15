@@ -1,402 +1,231 @@
 <?php
-
-/*
- * ============================================================
- * DATABASE CONNECTION
- * ============================================================
- */
-
+//Connect database
 require_once "db.php";
 
+//Variables for search term and result
+$eventRedirect = false;
+$patientRedirect = false;
+$search = "";
+$patient = [];
+$history = [];
 
-/*
- * ============================================================
- * GET PATIENT ID
- * ============================================================
- *
- * The patient's ID comes from the URL.
- *
- * Example:
- *
- * history.php?id=25
- */
-
-$patient_id = filter_input(
-    INPUT_GET,
-    "id",
-    FILTER_VALIDATE_INT
-);
-
-
-if (!$patient_id) {
-
-    die("Invalid patient ID.");
-
+//On form submission, run SQL query
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $search = trim($_POST["search"]);
+} elseif (isset($_GET["search"])) {
+    $search = trim($_GET["search"]);
 }
 
-
-/*
- * ============================================================
- * FIND PATIENT
- * ============================================================
- *
- * This retrieves the patient's name so we can display whose
- * history is being viewed.
- */
-
-$stmt = $pdo->prepare("
-    SELECT
-        `Patient_ID`,
-        `Name`
-    FROM patientlist_1
-    WHERE `Patient_ID` = ?
-");
-
-$stmt->execute([$patient_id]);
-
-$patient = $stmt->fetch();
-
-
-if (!$patient) {
-
-    die("Patient not found.");
-
+//Check if coming from add event page or add patient page
+if (isset($_GET["eventRedirect"])) {
+    $eventRedirect = trim($_GET["eventRedirect"]);
 }
 
+if (isset($_GET["patientRedirect"])) {
+    $patientRedirect = trim($_GET["patientRedirect"]);
+}
 
-/*
- * ============================================================
- * RETRIEVE PATIENT HISTORY
- * ============================================================
- *
- * patienthistory contains the actual history records.
- *
- * However, patienthistory only contains the Procedure_ID.
- *
- * The procedures table contains the readable procedure name
- * and category.
- *
- * Therefore, we JOIN the two tables together.
- *
- * Example:
- *
- * patienthistory:
- *
- * Procedure_ID = D2140
- *
- * becomes:
- *
- * D2140 - Amalgam Filling, One Surface
- */
+//Verify that something has been entered into the search field
+if ($search !== "") {
 
-$stmt = $pdo->prepare("
-    SELECT
-        ph.`Date`,
-        ph.`Procedure_ID`,
-        p.`ProcedureName`,
-        p.`Category`,
-        ph.`Amount Billed`,
-        ph.`Amount Owed`,
-        ph.`Notes`
+    //Query used for patient name
+    $sql = "
+        SELECT `Patient_ID`, `Name`
+        FROM patientlist_1
+        WHERE CAST(`Patient_ID` AS CHAR) = :patient_id
+        ";
 
-    FROM patienthistory ph
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([":patient_id" => $search]);
 
-    LEFT JOIN procedures p
-        ON ph.`Procedure_ID` = p.`ProcedureCode`
+    //Place result in $patient
+    $patient = $stmt->fetch();
 
-    WHERE ph.`Patient_ID` = ?
+    //Query used to get patient history using a join on patienthistory and procedures
+    $sql = "
+        SELECT
+            ph.`Date`,
+            ph.`Procedure_ID`,
+            p.`ProcedureName`,
+            p.`Category`,
+            ph.`Amount Billed`,
+            ph.`Amount Owed`,
+            ph.`Notes`
+        FROM patienthistory ph
+        LEFT JOIN procedures p ON ph.`Procedure_ID` = p.`ProcedureCode`
+        WHERE CAST(ph.`Patient_ID` AS CHAR) = :patient_id
+        ORDER BY ph.`Date` DESC
+        ";
 
-    ORDER BY ph.`Date` DESC
-");
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([":patient_id" => $search]);
 
-
-/*
- * Execute the history query for this patient.
- */
-
-$stmt->execute([$patient_id]);
-
-
-/*
- * Retrieve all history records.
- */
-
-$history = $stmt->fetchAll();
-
+    //Place results in $history
+    $history = $stmt->fetchAll();
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>
-        Patient History - Clearwater Dental
-    </title>
-
-    <link rel="stylesheet" href="style.css">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clearwater Dental</title>
+    <link rel="stylesheet" href="style.css?v=2">
 </head>
 
 <body>
+    <div class="container">
+        <header>
+            <?php require './page_elements/header.php'; ?>
+            <br>
+            <nav>
+                <a href="details.php">Search Patient</a>
 
-<div class="container">
+                <a href="history.php" class="main">Search Patient History</a>
 
-    <!-- ======================================================
-         PAGE HEADER
-         ====================================================== -->
+                <a href="add_patient.php">Add New Patient</a>
 
-    <header>
+                <a href="add_event.php">Add Patient Event</a>
+            </nav>
+        </header>
 
-        <h1>
-            Patient History
-        </h1>
+        <form method="POST" action="history.php">
+            <label for="search">
+                &nbspPatient ID
+            </label>
+            <input type="text" id="search" name="search" value="<?php echo htmlspecialchars($search) ?>"
+                placeholder="Enter patient ID" required>
 
-
-        <nav>
-
-            <a href="index.php">
-                Home
-            </a>
-
-            <a href="search.php">
+            <button type="submit">
                 Search
-            </a>
+            </button>
+        </form>
 
-            <a href="add_patient.php">
-                Add Patient
-            </a>
+        <!-- Generate results based on form input -->
+        <?php if ($_SERVER["REQUEST_METHOD"] === "POST" || $search !== ""): ?>
+            <br>
+            <br>
 
-        </nav>
+            <!-- If no patient exists -->
+            <?php if (!$patient): ?>
+                <div class="patient-header">
+                    <h2>
+                        <strong>No Patient Found</strong>
+                    </h2>
 
-    </header>
-
-
-    <!-- ======================================================
-         PATIENT IDENTIFICATION
-         ====================================================== -->
-
-    <div class="patient-header">
-
-        <h2>
-            <?= htmlspecialchars($patient["Name"]) ?>
-        </h2>
-
-        <p>
-
-            Patient ID:
-
-            <strong>
-                <?= htmlspecialchars(
-                    $patient["Patient_ID"]
-                ) ?>
-            </strong>
-
-        </p>
-
-    </div>
-
-
-    <!-- ======================================================
-         DISPLAY HISTORY
-         ====================================================== -->
-
-    <?php if (count($history) === 0): ?>
-
-        <!-- Display this if the patient has no history records -->
-
-        <div class="message">
-
-            No patient history was found.
-
-        </div>
-
-
-    <?php else: ?>
-
-
-        <h2>
-            Dental History
-        </h2>
-
-
-        <!--
-            Display each history record in a table.
-        -->
-
-        <table>
-
-            <thead>
-
-                <tr>
-
-                    <th>
-                        Date
-                    </th>
-
-                    <th>
-                        Procedure
-                    </th>
-
-                    <th>
-                        Category
-                    </th>
-
-                    <th>
-                        Amount Billed
-                    </th>
-
-                    <th>
-                        Amount Owed
-                    </th>
-
-                    <th>
-                        Notes
-                    </th>
-
-                </tr>
-
-            </thead>
-
-
-            <tbody>
-
-
-            <!--
-                foreach loops through every history record
-                returned by the database.
-            -->
-
-            <?php foreach ($history as $event): ?>
-
-                <tr>
-
-
-                    <!-- Date of the dental event -->
-
-                    <td>
-                        <?= htmlspecialchars(
-                            $event["Date"]
-                        ) ?>
-                    </td>
-
-
-                    <!--
-                        Display both the procedure code and
-                        the readable procedure name.
-                    -->
-
-                    <td>
-
+                    <p>
+                        Patient ID:
                         <strong>
-
-                            <?= htmlspecialchars(
-                                $event["Procedure_ID"]
-                            ) ?>
-
+                            <?= htmlspecialchars($search) ?>
                         </strong>
+                    </p>
+                </div>
 
-                        <br>
+                <div class="message">
+                    No patient was found with this Patient ID.
+                </div>
 
-                        <?= htmlspecialchars(
-                            $event["ProcedureName"]
-                            ?? "Unknown procedure"
-                        ) ?>
+            <?php endif; ?>
+            <?php if ($patient): ?>
 
-                    </td>
+                <!-- Patient was found -->
+                <div class="patient-header">
+                    <h2>
+                        <?= htmlspecialchars($patient["Name"]) ?>
+                    </h2>
+                    <p>
+                        Patient ID: <strong><?= htmlspecialchars($patient["Patient_ID"]) ?></strong>
+                    </p>
+                </div>
+
+                <?php if ($eventRedirect === "true"): ?>
+                    <br>
+                    <div class="message" style="border-color: #00c04b; background: #ecfbe1; width: fit-content;">
+                        Patient event added successfully.
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($patientRedirect === "true"): ?>
+                    <br>
+                    <div class="message" style="border-color: #00c04b; background: #ecfbe1; width: fit-content;">
+                        Patient added successfully.
+                    </div>
+                    <br>
+                <?php endif; ?>
+
+                <!-- If patient has no history -->
+                <?php if (count($history) === 0): ?>
+                    <div class="message">
+                        No history found.
+                    </div>
+                <?php else: ?>
+
+                    <!-- Fill table if patient history exists -->
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Procedure ID</th>
+                                <th>Category</th>
+                                <th>Amount Billed</th>
+                                <th>Amount Owed</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <?php foreach ($history as $event): ?>
+                                <tr>
+                                    <td>
+                                        <?= htmlspecialchars(
+                                            $event["Date"]
+                                        ) ?>
+                                    </td>
+                                    <td>
+                                        <strong>
+                                            <?= htmlspecialchars(
+                                                $event["Procedure_ID"]
+                                            ) ?>
+                                        </strong>
+                                        <br>
+                                        <?= htmlspecialchars(
+                                            $event["ProcedureName"]
+                                            ?? "Unknown procedure"
+                                        ) ?>
+                                    </td>
+                                    <td>
+                                        <?= htmlspecialchars(
+                                            $event["Category"]
+                                        ) ?>
+                                    </td>
+                                    <td>
+                                        <?= htmlspecialchars(
+                                            $event["Amount Billed"]
+                                        ) ?>
+                                    </td>
+                                    <td>
+                                        <?= htmlspecialchars(
+                                            $event["Amount Owed"]
+                                        ) ?>
+                                    </td>
+                                    <td>
+                                        <?= htmlspecialchars(
+                                            $event["Notes"]
+                                        ) ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            <?php endif; ?>
+        <?php endif; ?>
 
 
-                    <!-- Procedure category -->
-
-                    <td>
-
-                        <?= htmlspecialchars(
-                            $event["Category"]
-                            ?? ""
-                        ) ?>
-
-                    </td>
-
-
-                    <!-- Amount billed -->
-
-                    <td>
-
-                        <?= htmlspecialchars(
-                            $event["Amount Billed"]
-                        ) ?>
-
-                    </td>
-
-
-                    <!-- Amount still owed -->
-
-                    <td>
-
-                        <?= htmlspecialchars(
-                            $event["Amount Owed"]
-                        ) ?>
-
-                    </td>
-
-
-                    <!-- Notes associated with the event -->
-
-                    <td>
-
-                        <?= htmlspecialchars(
-                            $event["Notes"]
-                        ) ?>
-
-                    </td>
-
-                </tr>
-
-            <?php endforeach; ?>
-
-            </tbody>
-
-        </table>
-
-    <?php endif; ?>
-
-
-    <!-- ======================================================
-         PAGE ACTIONS
-         ====================================================== -->
-
-    <div class="page-actions">
-
-
-        <!-- Return to demographics -->
-
-        <a
-            href="demographics.php?id=<?= urlencode($patient["Patient_ID"]) ?>"
-            class="button"
-        >
-            View Demographics
-        </a>
-
-
-        <!-- Add another history event -->
-
-        <a
-            href="add_event.php?patient_id=<?= urlencode($patient["Patient_ID"]) ?>"
-            class="button"
-        >
-            Add New Event
-        </a>
-
+        <?php require './page_elements/footer.php'; ?>
     </div>
-
-</div>
 
 </body>
 

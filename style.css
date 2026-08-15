@@ -1,95 +1,64 @@
-/*
- * ============================================================
- * GENERAL PAGE SETTINGS
- * ============================================================
- *
- * box-sizing makes width calculations easier by including
- * padding and borders within an element's declared width.
- */
-
 * {
   box-sizing: border-box;
 }
 
-/*
- * Set the general appearance of the entire page.
- */
-
 body {
   margin: 0;
-
   font-family: Arial, Helvetica, sans-serif;
-
   background: #f2f5f7;
-
   color: #333;
 }
 
-/*
- * ============================================================
- * MAIN CONTAINER
- * ============================================================
- *
- * This creates the white card that contains the application.
- */
-
+/* MAIN CONTAINER */
 .container {
   width: 92%;
-
   max-width: 1100px;
-
   margin: 40px auto;
-
   padding: 30px;
-
   background: #fff;
-
   border-radius: 8px;
-
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/*
- * ============================================================
- * HEADER
- * ============================================================
- */
-
+/* HEADER */
 header {
   margin-bottom: 30px;
-
   border-bottom: 1px solid #ddd;
-
   padding-bottom: 15px;
 }
 
 header h1 {
   margin: 0 0 5px;
-
   color: #234b63;
 }
 
 header p {
   margin: 0;
-
   color: #666;
 }
 
-/*
- * ============================================================
- * NAVIGATION
- * ============================================================
- */
+header a {
+  text-decoration: none;
+}
 
+/* FOOTER */
+footer {
+  margin-top: 30px;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+/* NAVIGATION ELEMENTS */
 nav {
   margin-top: 15px;
 }
 
 nav a {
-  margin-right: 20px;
-
+  margin-right: 15px;
   color: #2779a7;
-
   text-decoration: none;
 }
 
@@ -97,37 +66,32 @@ nav a:hover {
   text-decoration: underline;
 }
 
-/*
- * ============================================================
- * HOME PAGE MENU
- * ============================================================
- *
- * Creates the three large buttons on index.php.
- */
+nav .main {
+  padding: 3px 6px;
+  font-weight: bold;
+  color: #333;
+  border: 1px solid #333;
+  border-bottom: none;
+  margin-bottom: -16px;
+}
+
+/* HOME PAGE MENU */
 
 .menu {
   display: flex;
-
   flex-wrap: wrap;
-
   gap: 15px;
+  justify-content: center;
 }
 
 .menu-button {
   display: block;
-
   padding: 15px 25px;
-
   background: #2779a7;
-
   color: white;
-
   border-radius: 5px;
-
   text-decoration: none;
-
   text-align: center;
-
   min-width: 200px;
 }
 
@@ -135,19 +99,13 @@ nav a:hover {
   background: #1e5e82;
 }
 
-/*
- * ============================================================
- * SEARCH AREA
- * ============================================================
- */
-
+/* SEARCH FIELD */
 .search-box {
   margin-bottom: 30px;
 }
 
 .search-row {
   display: flex;
-
   gap: 10px;
 }
 
@@ -155,73 +113,39 @@ nav a:hover {
   flex: 1;
 }
 
-/*
- * ============================================================
- * FORMS
- * ============================================================
- */
-
+/* FORM ELEMENTS */
 .form {
   max-width: 650px;
 }
 
-/*
- * Make form labels appear above their inputs.
- */
-
 label {
   display: block;
-
   margin-top: 15px;
-
   margin-bottom: 6px;
-
   font-weight: bold;
 }
-
-/*
- * Style text boxes and dropdowns.
- */
 
 input,
 select {
   width: 100%;
-
   padding: 11px;
-
   border: 1px solid #ccc;
-
   border-radius: 4px;
-
   font-size: 15px;
 }
 
-/*
- * ============================================================
- * BUTTONS
- * ============================================================
- */
-
+/* BUTTONS */
 button,
 .button {
   display: inline-block;
-
   margin-top: 20px;
-
   padding: 11px 20px;
-
   border: none;
-
   border-radius: 4px;
-
   background: #2779a7;
-
   color: white;
-
   font-size: 15px;
-
   text-decoration: none;
-
   cursor: pointer;
 }
 
@@ -230,68 +154,36 @@ button:hover,
   background: #1e5e82;
 }
 
-/*
- * ============================================================
- * TABLES
- * ============================================================
- *
- * Used by search results and patient history.
- */
-
+/* TABLE ELEMENTS */
 table {
   width: 100%;
-
   border-collapse: collapse;
-
   margin-top: 20px;
 }
 
 th,
 td {
   padding: 12px;
-
   border: 1px solid #ddd;
-
   text-align: left;
-
   vertical-align: top;
 }
 
-/*
- * Table header styling.
- */
-
 th {
   background: #234b63;
-
   color: white;
 }
 
-/*
- * Alternate table row backgrounds make large tables easier
- * to read.
- */
-
+/* Alternate table row backgrounds to improve readability */
 tr:nth-child(even) {
   background: #f7f9fa;
 }
 
-/*
- * ============================================================
- * PATIENT HEADER
- * ============================================================
- *
- * Used on demographics.php, history.php, and add_event.php
- * to clearly identify which patient is being viewed.
- */
-
+/* PATIENT HEADER */
 .patient-header {
   margin-bottom: 25px;
-
   padding: 20px;
-
   background: #f4f8fa;
-
   border-left: 5px solid #2779a7;
 }
 
@@ -309,9 +201,7 @@ tr:nth-child(even) {
 
 .demographics {
   display: grid;
-
   grid-template-columns: repeat(2, 1fr);
-
   gap: 15px;
 }
 
@@ -321,13 +211,9 @@ tr:nth-child(even) {
 
 .info-item {
   display: flex;
-
   flex-direction: column;
-
   padding: 15px;
-
   border: 1px solid #ddd;
-
   border-radius: 5px;
 }
 
@@ -337,13 +223,9 @@ tr:nth-child(even) {
 
 .info-item .label {
   margin: 0 0 5px;
-
   color: #666;
-
   font-size: 13px;
-
   font-weight: bold;
-
   text-transform: uppercase;
 }
 
@@ -359,9 +241,7 @@ tr:nth-child(even) {
 
 .actions a {
   margin-right: 10px;
-
   color: #2779a7;
-
   text-decoration: none;
 }
 
@@ -383,7 +263,7 @@ tr:nth-child(even) {
 
 /*
  * ============================================================
- * INFORMATION MESSAGE
+ * INFORMATION MISSING MESSAGE
  * ============================================================
  *
  * Used when a search returns no patients or a patient has
@@ -392,11 +272,8 @@ tr:nth-child(even) {
 
 .message {
   padding: 15px;
-
   background: #eef5f8;
-
   border: 1px solid #c9dfe8;
-
   border-radius: 5px;
 }
 
@@ -410,16 +287,12 @@ tr:nth-child(even) {
 
 .error {
   padding: 15px;
-
   margin-bottom: 20px;
-
   background: #fbeaea;
-
   border: 1px solid #e3aaaa;
-
   border-radius: 5px;
-
   color: #9b2226;
+  white-space: pre-line;
 }
 
 /*
